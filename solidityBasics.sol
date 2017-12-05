@@ -210,3 +210,135 @@ function increment(uint x) constant returns (uint x) {
     y += 1; // this line would fail
     // y is a state variable, and can't be changed in a constant function 
 }
+
+// 'Function Visibility specifiers'
+// These can be placed where 'constant' is, including:
+// public - visible externally and internally (default)
+// external
+// private - only visible in the current contract
+// internal - only visible in current contract, and those deriving from it 
+
+// Functions hoisted - and can assign a function to a variable
+function a() {
+    var z = b;
+    b();
+}
+
+function b() {
+
+}
+
+// Prefer loops to recursion (max call stack depth is 1024)
+
+// B. Events
+// Events are notify external parties; easy to search and 
+// access events from outside blockchain (with lightweight clients)
+// typically declare after contract parameters
+
+// Typically, capitalized - and add Log in front to be explicit and prevent confusion
+// with a function call 
+
+// Declare
+event LogSent(address indexed from, address indexed to, uint amount);   // note capital first letter
+
+// Call 
+Sent(from, to, amount);
+
+// For an external party (a contract or external entity), to watch:
+Coin.Sent().watch({}, '', function(error, result) {
+    if (!error) {
+        console.log("Coin transfer: " + result.args.amount +
+            " coins were sent from " + result.args.from +
+            " to " + result.args.to + ".");
+        console.log("Balances now:\n" +
+            "Sender: " + Coin.balances.call(result.args.from) +
+            "Receiver: " + Coin.balances.call(result.args.to));
+    }
+})
+// Common paradigm for one contract to depend on another (e.g., a
+// contract that depends on current exchange rate provided by another)
+
+// C. Modifiers
+// Modifiers validate inputs to functions such as minimal balance or user auth;
+// similar to guard clause in other languages
+
+// '_' (underscore) often included as last line in body, and indicates
+// function being called should be placed there
+modifier onlyAfter(uint _time) { if (now <= _time) throw; _ }
+modifier onlyOwner { if (msg.sender == owner) _ }
+// commonly used with state machines
+modifier onlyIfState (State currState) { if (currState != State.A) _ }
+
+// Append right after function declaration
+function changeOwner(newOwner)
+onlyAfter(someTime)
+onlyOwner()
+onlyIfState(State.A)
+{
+    owner = newOwner;
+}
+
+// underscore can be included before end of body,
+// but explicitly returning will skip, so use carefully
+modifier checkValue(uint amount) {
+    _ 
+    if (msg.value > amount) {
+        uint amountToRefund = amount - msg.value;
+        if (!msg.sender.send(amountToRefund)) {
+            throw;
+        }
+    }
+}
+
+// 6. BRANCHING AND LOOPS 
+
+// All basic logic blocks work - including if/else, for, while, break, continue
+// return - but no switch
+
+// Syntax same as javascript, but no type conversion from non-boolean
+// to boolean (comparison operators must be used to get the boolean val)
+
+// For loops that are determined by user behavior, be careful - as contracts have a maximal
+// amount of gas for a block of code - and will fail if that is exceeded
+// For example:
+for (uint x = 0; x < refundAddressList.length; x++) {
+    if (!refundAddressList[x].send(SOME_AMOUNT)) {
+        throw;
+    }
+}
+
+// Two errors above:
+// 1. A failure on send stops the loop from completing, tying up money
+// 2. This loop could be arbitrarily long (based on the amount of users who need refunds), and 
+// therefore may always fail as it exceeds the max gas for a block
+// Instead, you should let people withdraw individually from their subaccount, and mark withdrawn
+
+// 7. OBJECTS/CONTRACTS 
+
+// A. Calling external contract 
+contract infoFeed {
+    function info() returns (uint ret) { return 42; }
+}
+
+contract Consumer {
+    InfoFeed feed;  // points to contract on blockchain
+
+    // Set feed to existing contract instance
+    function setFeed(address addr) {
+        // automatically cast, be careful; constructor is not called 
+        feed = InfoFeed(addr);
+    }
+
+    // Set feed to new instance of contract
+    function createNewFeed() {
+        feed = new InfoFeed();  // new instance created; constructor called
+    }
+
+    function callFeed() {
+        // final parentheses call contract, can optionally add
+        // custom ether value or gas
+        feed.info.value(10).gas(800)();
+    }
+}
+
+// B. Inheritance
