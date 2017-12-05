@@ -115,3 +115,98 @@ mapping (address => mapping (address => uint)) public custodians;
 // To delete
 delete balances["John"];
 delete balances;    // sets all elements to 0
+
+// Unlike other languages, CANNOT iterate through all elements in
+// mapping, without knowing source keys - can build data structure 
+// on top to do this
+
+// Structs and enums
+struct Bank {
+    address owner;
+    uint balance;
+}
+Bank b = Bank({
+    owner: msg.sender,
+    balance: 5
+});
+// or
+Bank c = Bank(msg.sender, 5);
+
+c.balance = 5;  // set to new value
+delete b;
+// sets to initial value, set all variables in struct to 0, except mappings 
+
+// Enums 
+enum State { Created, Locked, Inactive };   // often used for state machine 
+State public state; // Declare variable from enum 
+state = State.Created;
+// enums can be explicitly converted to ints 
+uint createdState = uint(State.Created);    // 0
+
+// Data locations: Memory vs. storage vs. stack - all complex types (arrays,
+// structs) have a data location 
+// 'memory' does not persist, 'storage' does 
+// Default is 'storage' for local and state variables; 'memory' for func params 
+// stack holds small local variables 
+
+// for most types. can explicitly set which data location to use 
+
+// 3. Simple operators
+// Comparison, bit operators and arithmetic operators are provided
+// exponentiation: **
+// exclusive or: ^
+// bitwise negation: ~
+
+// 4. Global Variables of note 
+// ** this **
+this;   // address of contract
+// often used at end of contract life to send remaining balance to party
+this.balance;
+this.someFunction();    // calls func externally via call, not via internal jump
+
+// ** msg - Current message received by the contract ** **
+msg.sender; // address of sender 
+msg.value;  // amount of ether provided to this contract in wei 
+msg.data    // bytes, complete call data 
+msg.gas     // remaining gas 
+
+// ** tx - This transaction **
+tx.origin;  // address of sender of the transaction
+tx.gasprice;    // gas price of the transaction
+
+// ** block - Information about current block **
+now;        // current time (approximately), alias for block.timestamp (uses Unix time)
+block.number;   // current block number
+block.difficulty;   // current block difficulty
+block.blockhash(1); // returns bytes32, only works for most recent 256 blocks 
+block.gasLimit();
+
+// ** storage - Persistent storage hash **
+storage['abc'] = 'def'; // maps 256 bit words to 256 bit words
+
+// 4. FUNCTIONS AND MORE 
+// A. Functions 
+// Simple function 
+function increment(uint x) returns (uint) {
+    x += 1;
+    return x;
+}
+
+// Functions can return many arguments, and by specifying returned arguments
+// name don't need to explicitly return 
+function increment(uint x, uint y) returns (uint x, uint y) {
+    x += 1;
+    y += 1;
+}
+// Call previous function 
+uint (a, b) = increment(1, 1);
+
+// 'constant' indicates that function does not/cannot change persistent vars 
+// Constant function execute locally, not on blockchain
+uint y;
+
+function increment(uint x) constant returns (uint x) {
+    x += 1;
+    y += 1; // this line would fail
+    // y is a state variable, and can't be changed in a constant function 
+}
