@@ -81,4 +81,51 @@ contract CrowdFunder {
         checkIfFundingCompleteOrExpired();
         return contributions.length - 1;    // return id 
     }
+
+    function checkIfFundingCompleteOrExpired() {
+        if (totalRaised > minimumToRaise) {
+            state = State.Successful;
+            payOut();
+
+            // could incentivize sender who initiated state change here
+        }
+        else if (now > raiseBy) {
+            state = State.ExpiredRefund;    // backers can now collect refunds by calling getRefund(id)
+        }
+        completeAt = now;
+    }
+
+    function payOut() public inState(State.Successful) {
+        if (!fundRecipient.send(this.balance)) {
+            throw;
+        }
+
+        LogWinnerPaid(fundRecipient);
+    }
+
+    function getRefund(id) public inState(State.ExpiredRefund) {
+        if (contributions.length <= id || id < 0 || contributions[id].amount == 0) {
+            throw;
+        }
+
+        uint amountToRefund = contributions[id].amount;
+        contributions[id].amount = 0;
+
+        if (!contributions[id].contributor.send(amountToSend)) {
+            contributions[id].amount = amountToSend;
+            return false;
+        }
+
+        return true;
+    }
+
+    function removeContract() public isCreator() atEndOfLifecycle() {
+        selfdestruct(msg.sender);
+        // creator gets all money that hasn't be claimed
+    }
+
+    function() {
+        throw;
+    }
 }
+// ** END EXAMPLE **
