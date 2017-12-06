@@ -472,6 +472,69 @@ contract SomeOracle {
 // and registering with Some Oracle 
 
 // F. State machines 
-// se example below for State enum and inState modifier
+// see example below for State enum and inState modifier
 
-// 
+// CrowdFunder.sol -----> new file in same directory
+
+// 10. OTHER NATIVE FUNCTIONS 
+
+// Currency units
+// Currency is defined using wei, smallest unit of Ether 
+uint minAmount = 1 wei;
+uint a = 1 finney;  // 1 ether == 1000 finney
+// Other units, see: http://ether.fund/tool/converter
+
+// Time units
+1 == 1 second
+1 minutes == 60 seconds
+
+// Can multiply a variable times unit, as units are not stored in a variable
+uint x = 5;
+(x * 1 days);   // 5 days
+
+// Careful about leap seconds/years with equality statements for time
+// (instead, prefer greater than/less than)
+
+// Cryptography
+// All strings passed are concatenated before hash action 
+sha3("ab", "cd");
+ripemd160("abc");
+sha256("def");
+
+// 11. SECURITY
+
+// Bugs can be disastrous in Ethereum contracts - and even popular patterns in Solidity,
+// may be found to be antipatterns
+
+// 12. LOW LEVEL FUNCTIONS
+// call - low level, not often used, does not provide type safety
+successBoolean = someContractAddress.call("function_name", "arg1", "arg2");
+
+// callcode - Code at target address executed in *context* of Calling contract
+// provides library functionality
+someContractAddress.callcode('function_name');
+
+// 13. STYLE NOTES
+// Based on Python's PEP8 style guide
+
+// Quick summary:
+// 4 spaces for indentation
+// Two lines separate contract declarations (and other top level declarations)
+// Avoid extraneous spaces in parentheses
+// Can omit curly braces for one line statement (if, for, etc)
+// else should be placed on own line 
+
+// 14. NATSPEC COMMENTS
+// used for documentation, commenting, and external UIs 
+
+// Contract natspec - always above contract definition
+/// @title Contract title 
+/// @author Author name 
+
+// Function natspec 
+/// @notice Information about what function does; shown when function to execute
+/// @dev Function documentation for developer
+
+// Function parameter/return value natspec 
+/// @param someParam Some description of what the param does 
+/// @return Description of the return value 
