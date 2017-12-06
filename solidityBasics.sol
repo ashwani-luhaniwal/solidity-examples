@@ -342,3 +342,136 @@ contract Consumer {
 }
 
 // B. Inheritance
+
+// Order matters, last inherited contract (i.e., 'def') can override parts of
+// previously inherited contracts
+contract MyContract is abc, def("a custom argument to def") {
+
+    // Override function
+    function z() {
+        if (msg.sender == owner) {
+            def.z();    // call overridden function from def
+            super.z();  // call immediate parent overridden function
+        }
+    }
+}
+
+// abstract function 
+function someAbstractFunction(uint x);
+// cannot be compiled, so used in base/abstract contracts
+// that are then implemented
+
+// C. Import
+
+import "filename";
+import "github.com/ethereum/dapp-bin/library/iterable_mapping.sol";
+
+// Importing under active development
+// Cannot currently be done at command line 
+
+// 8. OTHER KEYWORDS
+
+// A. Throwing
+// Throwing 
+throw;  // reverts unused money to sender, state is reverted
+// Can't currently catch
+
+// Common design pattern is:
+if (!addr.send(123)) {
+    throw;
+}
+
+// B. Selfdestruct
+// selfdestruct current contract, sending funds to address (often creator)
+selfdestruct(SOME_ADDRESS);
+
+// removes storage/code from current/future blocks
+// helps thin clients, but previous data persists in blockchain
+
+// Common pattern, lets owner end the contract and receive remaining funds
+function remove() {
+    if (msg.sender == creator) {    // Only let the contract creator do this
+        selfdestruct(creator);      // Makes contract inactive, returns funds
+    }
+}
+
+// May want to deactivate contract manually, rather than selfdestruct
+// (ether sent to selfdestructed contract is lost)
+
+// 9. CONTRACT DESIGN NOTES
+
+// A. Obfuscation
+// All variables are publicly viewable on blockchain, so anything
+// that is private needs to be obfuscated (e.g., hashed w/secret)
+
+// Steps: 1. Commit to something, 2. Reveal commitment
+sha3("some_bid_amount", "some_secret"); // commit 
+
+// call contract's reveal function in the future
+// showing bid plus secret that hashes to SHA3 
+reveal(100, "mySecret");
+
+// B. Storage optimization
+// Writing to blockchain can be expensive, as data stored forever; encourages
+// smart ways to use memory (eventually, compilation will be better, but for now 
+// benefits to planning data structures - and storing min amount in blockchain)
+
+// Cost can often be high for items like multidimensional arrays
+// (cost is for storing data - not declaring unfilled variables)
+
+// C. Data access in blockchain
+// Cannot restrict human or computer from reading contents of 
+// transaction or transaction's state
+
+// While 'private' prevents other *contracts* from reading data
+// directly - any other party can still read data in blockchain
+
+// All data to start of time is stored in blockchain, so 
+// anyone can observe all previous data and changes 
+
+// D. Cron Job
+// Contracts must be manually called to handle time-based scheduling; can create external
+// code to regularly ping, or provide incentives (ether) for others to 
+
+// E. Observer Pattern 
+// An Observer Pattern lets you register as a subscriber and 
+// register a function which is called by the oracle (note, the oracle pays
+// for this action to be run)
+// Some similarities to subscription in Pub/sub 
+
+// This is an abstract contract, both client and server classes import 
+// the client should implement 
+contract SomeOracleCallback {
+    function oracleCallback(int _value, uint _time, bytes32 info) external;
+}
+
+contract SomeOracle {
+    SomeOracleCallback[] callbacks; // array of all subscribers
+
+    // Register subscriber
+    function addSubscriber(SomeOracleCallback a) {
+        callbacks.push(a);
+    }
+
+    function notify(value, time, info) private {
+        for (uint i = 0; i < callbacks.length; i++) {
+            // all called subscribers must implement the oracleCallback
+            callbacks[i].oracleCallback(value, time, info);
+        }
+    }
+
+    function doSomething() public {
+        // Code to do something
+
+        // Notify all subscribers
+        notify(_value, _time, _info);
+    }
+}
+
+// Now, your client contract can addSubscriber by importing SomeOracleCallback
+// and registering with Some Oracle 
+
+// F. State machines 
+// se example below for State enum and inState modifier
+
+// 
