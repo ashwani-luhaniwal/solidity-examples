@@ -12,7 +12,7 @@ contract GreeterContract {
 
     // The constructor
     // It accepts a string input and saves it to the contract's "greeting" variable.
-    function Greeter(string _greeting) public {
+    function GreeterContract(string _greeting) public {
         creator = msg.sender;
         greeting = _greeting;
     }
