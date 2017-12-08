@@ -1,0 +1,88 @@
+// This contract demonstrates a simple non-constant (transactional) function you can call from geth
+
+contract ValueIncrementor {
+
+    address creator;
+    uint counter;
+    uint counter2;
+    uint counter3;
+    // string whathappend;
+    // string currentstatus;
+    int customvalue;
+
+    // constructor
+    function ValueIncrementor() public {
+        creator = msg.sender;
+        counter = 0;
+        counter2 = 0;
+        counter3 = 0;
+    }
+
+    // takes no parameters and merely increments the "counter" value
+    function increment() {
+        counter = counter + 1;
+    }
+
+    // takes one parameter and merely increments the "counter2" value by the much.
+    // call this in geth like so: > ValueIncrementor.incrementByValue.sendTransaction(3, {from:eth.coinbase});
+    // where 3 is the howmuch parameter
+    function incrementByValue(int howmuch) {
+        if (howmuch == 0) {
+            counter2 += 1;
+            // whathappend = "howmuch was zero. Increment by 1.";
+        }
+        else {
+            counter2 += howmuch;
+            // whathappend = "howmuch was nonzero. Increment by its value.";
+        }
+        return;
+    }
+
+    // call this in geth like so:
+    // > ValueIncrementor.incrementByTwoParams.sendTransaction(3, 8, {from:eth.coinbase, gas:1000000});
+    // where 3 is the howmuch parameter, 8 is customvalue and gas was specified to make sure the tx happened.
+    function incrementByTwoParams(int howmuch, int _customvalue) {
+        customvalue = _customvalue;
+        if (howmuch == 0) {
+            counter3 += 1;
+            // whathappend = "howmuch was zero. Increment by 1. customvalue also set.";
+        }
+        else {
+            counter3 += howmuch;
+            // whathappend = "howmuch was nonzero. Increment by its value. customvalue also set.";
+        }
+        return;
+    }
+
+    // get whathappend string status
+    /* function getWhatHappened() constant returns(string) {
+        return whathappend;
+    }*/
+
+    // get custom value
+    function getCustomValue() constant returns(int) {
+        return customvalue;
+    }
+
+    // get counter value
+    function getIteration() constant returns(uint) {
+        return counter;
+    }
+
+    // get counter2 value
+    function getIncrementByValue() constant returns(uint) {
+        return counter2;
+    }
+
+    // get counter3 value
+    function getIncrementByParamsValue() constant returns(uint) {
+        return counter3;
+    }
+
+    // destroy creator
+    function kill() {
+        if (msg.sender == creator) {
+            suicide(creator);
+        }
+    }
+}
